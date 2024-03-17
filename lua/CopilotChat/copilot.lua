@@ -48,12 +48,22 @@ local function uuid()
 end
 
 local function file_write(path, data, mode)
-  mode = mode or 'w' -- Default mode is write, which overwrites the file
-  local file, err = io.open(path, mode)
-  if not file then
-    error('Error opening file: ' .. tostring(err))
+  mode = mode or 'w'
+  local ok, result = pcall(function()
+    return { io.open(path, mode) }
+  end)
+  local file, err = unpack(result)
+  if not ok or not file then
+    log.error('Error opening file: ' .. tostring(err))
+    return
   end
-  file:write(data)
+  ok, result = pcall(function()
+    return { file.write(file, data) }
+  end)
+  err = unpack(result)
+  if not ok then
+    log.error('Error writing to file: ' .. tostring(err))
+  end
   file:close()
 end
 
